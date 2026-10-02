@@ -1,7 +1,7 @@
 name: RandomCraftingPlugin
 version: 1.0.0
 main: de.wesqs.randomcrafting.RandomCraftingPlugin
-api-version: 1.20
+api-version: '1.21'
 description: Globale zufällige Crafting-Rezepte
 commands:
   randomcraft:
