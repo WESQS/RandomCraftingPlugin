@@ -1,0 +1,7 @@
+# Git ignore for Java/Spigot build artifacts
+/target/
+/.idea/
+*.iml
+*.class
+*.log
+.DS_Store
