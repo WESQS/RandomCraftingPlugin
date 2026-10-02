@@ -10,167 +10,65 @@ import org.bukkit.inventory.Recipe;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
-public final class RandomCraftingPlugin extends JavaPlugin {
+public class RandomCraftingPlugin extends JavaPlugin {
 
     private final Random random = new Random();
-    private final List<Material> randomMaterials = Arrays.asList(
-            Material.STONE,
-            Material.DIRT,
-            Material.COBBLESTONE,
-            Material.SAND,
-            Material.GRAVEL,
-            Material.OAK_LOG,
-            Material.BIRCH_LOG,
-            Material.GLASS,
-            Material.REDSTONE,
-            Material.COAL,
-            Material.IRON_INGOT,
-            Material.GOLD_INGOT,
-            Material.DIAMOND,
-            Material.EMERALD,
-            Material.BRICK,
-            Material.EXPERIENCE_BOTTLE,
-            Material.PUMPKIN,
-            Material.MELON,
-            Material.CARROT,
-            Material.POTATO,
-            Material.BEEF,
-            Material.COOKED_BEEF,
-            Material.STRING,
-            Material.WHITE_WOOL,
-            Material.TNT,
-            Material.LAPIS_LAZULI,
-            Material.WHEAT,
-            Material.BOOK,
-            Material.ENDER_PEARL,
-            Material.PRISMARINE_SHARD
+    private final List<Material> materials = Arrays.asList(
+            Material.STONE, Material.DIRT, Material.COBBLESTONE, Material.SAND,
+            Material.GRAVEL, Material.OAK_LOG, Material.BIRCH_LOG, Material.GLASS,
+            Material.REDSTONE, Material.COAL, Material.IRON_INGOT, Material.GOLD_INGOT,
+            Material.DIAMOND, Material.EMERALD, Material.BRICK, Material.TNT,
+            Material.WHEAT, Material.BOOK, Material.ENDER_PEARL, Material.LAPIS_LAZULI,
+            Material.CARROT, Material.POTATO, Material.BEEF, Material.COOKED_BEEF,
+            Material.STRING, Material.WHITE_WOOL, Material.PUMPKIN
     );
 
     @Override
     public void onEnable() {
-        randomizeRecipes();
-        getServer().getScheduler().scheduleSyncRepeatingTask(this, this::randomizeRecipes, 20L * 60L * 10L, 20L * 60L * 10L);
-        getLogger().info("RandomCraftingPlugin aktiviert. Alle Crafting-Rezepte werden jetzt global zufällig neu generiert.");
+        getLogger().info("RandomCraftingPlugin gestartet");
+        regenerateRecipes();
+        getServer().getScheduler().scheduleSyncRepeatingTask(this, this::regenerateRecipes, 12000L, 12000L);
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!command.getName().equalsIgnoreCase("randomcraft")) {
-            return false;
+        if (command.getName().equalsIgnoreCase("randomcraft")) {
+            regenerateRecipes();
+            sender.sendMessage("§aNeue Rezepte generiert!");
+            return true;
         }
-
-        randomizeRecipes();
-        sender.sendMessage("§aNeue zufällige Crafting-Rezepte wurden global generiert.");
-        return true;
+        return false;
     }
 
-    private void randomizeRecipes() {
-        removeAllRecipes();
-
-        int recipeCount = 0;
-        for (int i = 0; i < 35; i++) {
-            if (registerRandomRecipe()) {
-                recipeCount++;
+    private void regenerateRecipes() {
+        Iterator<Recipe> it = Bukkit.recipeIterator();
+        while (it.hasNext()) {
+            Recipe recipe = it.next();
+            if (recipe != null && recipe.getKey() != null) {
+                Bukkit.removeRecipe(recipe.getKey());
             }
         }
 
-        getLogger().info("RandomCraftingPlugin: " + recipeCount + " zufällige Crafting-Rezepte registriert.");
-    }
-
-    private void removeAllRecipes() {
-        Iterator<Recipe> iterator = Bukkit.recipeIterator();
-        while (iterator.hasNext()) {
-            Recipe recipe = iterator.next();
-            if (recipe == null || recipe.getKey() == null) {
-                continue;
-            }
-            Bukkit.removeRecipe(recipe.getKey());
+        for (int i = 0; i < 20; i++) {
+            createRandomRecipe();
         }
     }
 
-    private boolean registerRandomRecipe() {
-        Material outputMaterial = getRandomMaterial();
-        if (outputMaterial == null) {
-            return false;
-        }
+    private void createRandomRecipe() {
+        Material output = materials.get(random.nextInt(materials.size()));
+        String[] pattern = {"AB", "CD"};
 
-        String[] pattern = buildRandomPattern();
-        Map<Character, Material> ingredients = new HashMap<>();
+        NamespacedKey key = new NamespacedKey(this, "rand_" + System.nanoTime());
+        ShapedRecipe recipe = new ShapedRecipe(key, new ItemStack(output, 1));
 
-        int ingredientIndex = 0;
-        for (int row = 0; row < pattern.length; row++) {
-            char[] chars = pattern[row].toCharArray();
-            for (char c : chars) {
-                if (c == ' ') {
-                    continue;
-                }
-                if (!ingredients.containsKey(c)) {
-                    char usedChar = (char) ('A' + ingredientIndex);
-                    if (usedChar == c) {
-                        ingredients.put(c, getRandomMaterial());
-                    } else {
-                        ingredients.put(c, getRandomMaterial());
-                    }
-                    ingredientIndex++;
-                }
-            }
-        }
-
-        if (ingredients.isEmpty()) {
-            pattern = new String[] {"A"};
-            ingredients.put('A', getRandomMaterial());
-        }
-
-        NamespacedKey key = new NamespacedKey(this, "random_recipe_" + System.currentTimeMillis() + "_" + random.nextInt(1_000_000));
-        ShapedRecipe recipe = new ShapedRecipe(key, new ItemStack(outputMaterial));
         recipe.shape(pattern);
+        recipe.setIngredient('A', materials.get(random.nextInt(materials.size())));
+        recipe.setIngredient('B', materials.get(random.nextInt(materials.size())));
+        recipe.setIngredient('C', materials.get(random.nextInt(materials.size())));
+        recipe.setIngredient('D', materials.get(random.nextInt(materials.size())));
 
-        for (Map.Entry<Character, Material> entry : ingredients.entrySet()) {
-            recipe.setIngredient(entry.getKey(), entry.getValue());
-        }
-
-        return Bukkit.addRecipe(recipe);
-    }
-
-    private Material getRandomMaterial() {
-        if (randomMaterials.isEmpty()) {
-            return null;
-        }
-        return randomMaterials.get(random.nextInt(randomMaterials.size()));
-    }
-
-    private String[] buildRandomPattern() {
-        int width = random.nextInt(3) + 1;
-        int height = random.nextInt(3) + 1;
-
-        List<Character> symbols = new ArrayList<>(Arrays.asList('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'));
-        String[] pattern = new String[height];
-
-        for (int row = 0; row < height; row++) {
-            StringBuilder rowBuilder = new StringBuilder();
-            for (int col = 0; col < width; col++) {
-                if (random.nextBoolean()) {
-                    char symbol = symbols.get(random.nextInt(symbols.size()));
-                    rowBuilder.append(symbol);
-                } else {
-                    rowBuilder.append(' ');
-                }
-            }
-            pattern[row] = rowBuilder.toString();
-        }
-
-        if (pattern[0].trim().isEmpty()) {
-            pattern = new String[] {"A"};
-        }
-
-        return pattern;
+        Bukkit.addRecipe(recipe);
     }
 }
