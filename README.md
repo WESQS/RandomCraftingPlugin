@@ -1,23 +1,37 @@
 # RandomCraftingPlugin
 
-Ein Spigot Minecraft Plugin, das serverweit zufällige Crafting-Rezepte generiert.
+Ein Paper/Spigot-Plugin für Minecraft 1.21.1, das serverweit zufällige Crafting-Rezepte generiert.
 
 ## Features
 - Globale zufällige Crafting-Rezepte
-- Neue zufällige Rezepte beim Start
-- `/randomcraft` zum sofortigen Neu-Generieren
-- Automatische Neu-Generierung alle 10 Minuten
+- Neu generiert beim Start
+- `/randomcraft` zum sofortigen Neu-Mischen
+- Automatische Wiederholung alle 10 Minuten
+
+## Voraussetzungen
+- Java 21
+- Gradle installiert, oder Gradle Wrapper verwenden
+- Paper/Spigot Server 1.21.1
+
+## Build mit Gradle
+```bash
+gradle build
+```
+
+Oder mit dem Wrapper:
+```bash
+./gradlew build
+```
+
+Die erzeugte JAR-Datei liegt dann hier:
+```bash
+build/libs/RandomCraftingPlugin.jar
+```
 
 ## Installation
-1. Baue das Plugin mit Maven:
-   ```bash
-   mvn clean package
-   ```
-2. Lege die erzeugte Datei aus `target/` in den Ordner `plugins/` deines Spigot-Servers.
-3. Starte den Server neu.
+1. Kopiere die JAR in den `plugins/`-Ordner deines Servers
+2. Starte den Server
+3. Nutze `/randomcraft` für neue zufällige Rezeptliste
 
-## Befehl
-- `/randomcraft` — generiert neue globale Zufallsrezepte
-
-## Hinweise
-Das Plugin entfernt beim Aktivieren alle vorhandenen Crafting-Rezepte und ersetzt sie durch neue, zufällig generierte Rezepte.
+## Hinweis
+Das Plugin entfernt beim Start alle vorhandenen Crafting-Rezepte und ersetzt sie durch zufällig generierte.
