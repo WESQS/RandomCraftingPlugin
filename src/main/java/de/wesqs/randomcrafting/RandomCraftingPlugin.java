@@ -44,11 +44,17 @@ public class RandomCraftingPlugin extends JavaPlugin {
 
     private void regenerateRecipes() {
         Iterator<Recipe> it = Bukkit.recipeIterator();
+        List<NamespacedKey> keysToRemove = new ArrayList<>();
+        
         while (it.hasNext()) {
             Recipe recipe = it.next();
-            if (recipe != null && recipe.getKey() != null) {
-                Bukkit.removeRecipe(recipe.getKey());
+            if (recipe instanceof ShapedRecipe) {
+                keysToRemove.add(((ShapedRecipe) recipe).getKey());
             }
+        }
+        
+        for (NamespacedKey key : keysToRemove) {
+            Bukkit.removeRecipe(key);
         }
 
         for (int i = 0; i < 20; i++) {
